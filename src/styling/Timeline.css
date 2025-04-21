@@ -1,0 +1,132 @@
+.timeline-section {
+    background: #020407;
+    color: white;
+    padding: 5rem 2rem;
+  }
+  
+  .timeline-section h2 {
+    text-align: center;
+    color: #60a5fa;
+    margin-bottom: 3rem;
+    font-size: 2.5rem;
+  }
+  
+  .timeline {
+    position: relative;
+    max-width: 1200px;
+    margin: auto;
+    padding: 2rem 0;
+  }
+/*   
+  .timeline::after {
+    content: "";
+    position: absolute;
+    width: 4px;
+    background-color: #3b82f6;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    margin-left: -2px;
+  } */
+  
+  .timeline-item {
+    position: relative;
+    width: 50%;
+    padding: 20px 40px;
+    box-sizing: border-box;
+  }
+  
+  .timeline-item.left {
+    left: 0;
+    text-align: right;
+  }
+  
+  .timeline-item.right {
+    left: 50%;
+  }
+  
+  .timeline-icon {
+    background-color: #1e40af;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    padding: 12px;
+    width: 30px;
+    height: 30px;
+    font-size: 1.5rem;
+    border-radius: 50%;
+    position: absolute;
+    top: 15px;
+    right: -30px;
+    z-index: 1;
+  }
+  
+  .timeline-item.right .timeline-icon {
+    left: -30px;
+    right: auto;
+  }
+  
+  .timeline-box {
+    background-color: #1e293b;
+    padding: 1.5rem;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+  
+  .timeline-box h3 {
+    margin-top: 0;
+    color: #facc15;
+  }
+  
+  .timeline-box .date {
+    color: #93c5fd;
+    font-size: 0.9rem;
+    margin: 0.3rem 0 0.5rem;
+    font-weight: bold;
+  }
+  
+  /* Animation */
+  .timeline-item {
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 0.6s ease forwards;
+  }
+  
+  .timeline-item:nth-child(even) {
+    animation-delay: 0.2s;
+  }
+  .timeline-item:nth-child(odd) {
+    animation-delay: 0.4s;
+  }
+  
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .timeline::after {
+      left: 15px;
+    }
+  
+    .timeline-item {
+      width: 100%;
+      padding-left: 50px;
+      text-align: left;
+    }
+  
+    .timeline-icon {
+      left: 0;
+      right: auto;
+    }
+  
+    .timeline-item.right {
+      left: 0;
+    }
+  }
+  

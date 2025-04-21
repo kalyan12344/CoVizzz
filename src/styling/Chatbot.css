@@ -1,0 +1,125 @@
+.chatbot-container {
+    max-width: 800px;
+    margin: auto;
+    padding: 1rem;
+    font-family: 'Segoe UI', sans-serif;
+    color: white;
+    background-color: #111827;
+    border-radius: 12px;
+  }
+  
+  .chatbot-header {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  .chatbot-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #60a5fa;
+  }
+  
+  .chat-options {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+  }
+  
+  .dataset-select {
+    padding: 0.3rem;
+    border-radius: 6px;
+  }
+  
+  .chat-messages {
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid #374151;
+    padding: 1rem;
+    background: #1f2937;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+  
+  .message-container {
+    margin-bottom: 1.2rem;
+  }
+  
+  .message-bubble {
+    background: #374151;
+    padding: 0.75rem;
+    border-radius: 10px;
+  }
+  
+  .message-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.25rem;
+  }
+  
+  .message-icon {
+    margin-right: 0.4rem;
+  }
+  
+  .message-text {
+    margin: 0;
+  }
+  
+  .message-sender {
+    font-weight: bold;
+  }
+  
+  .message-container.user .message-bubble {
+    background-color: #2563eb;
+  }
+  
+  .message-container.bot .message-bubble {
+    background-color: #4b5563;
+  }
+  
+  .visualization-container {
+    margin-top: 1rem;
+  }
+  
+  .chat-input-container {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .chat-input-form {
+    display: flex;
+    width: 100%;
+    gap: 0.5rem;
+  }
+  
+  .chat-input {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+  }
+  
+  .send-button {
+    padding: 0.75rem 1rem;
+    border: none;
+    background-color: #3b82f6;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  
+  .loading-indicator {
+    text-align: center;
+    color: #9ca3af;
+    font-style: italic;
+  }
+  
+  .error-text {
+    color: #f87171;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+  }
+  
