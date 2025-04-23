@@ -31,6 +31,7 @@ const Chatbot = () => {
     try {
       const response = await axios.post(
         "http://localhost:5000/query",
+        // "https://covizzz-backend.onrender.com/query",
         {
           query: input,
           dataset: dataset,

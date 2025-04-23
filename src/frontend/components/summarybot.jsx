@@ -23,8 +23,8 @@ const SummaryBotOverlay = ({ onClose }) => {
 
     try {
       const response = await axios.post(
-        // "http://localhost:5000/summary",
-        "https://covizzz-backend.onrender.com/summary",
+        "http://localhost:5000/summary",
+        // "https://covizzz-backend.onrender.com/summary",
         { query: input, dataset },
         { headers: { "Content-Type": "application/json" } }
       );
