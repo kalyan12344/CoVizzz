@@ -19,18 +19,18 @@ app = Flask(__name__)
 CORS(app)
 
 # ✅ Dropbox Direct Download Links
-DROPBOX_DATASETS = {
-    "global_deaths": "https://www.dropbox.com/scl/fi/w6t6729gicr5c7lc0wd4q/covid19_global_daily_deaths.csv?rlkey=78yp5myjb592advu6bb2cy9tf&st=hfktxnb0&dl=1",
-    "us_cases":      "https://www.dropbox.com/scl/fi/26rezqi7n78gnmtntma32/covid19_us_daily_cases.csv?rlkey=hsq6mseu1xo5sm2niurbnj8bi&st=fu92ct1b&dl=1",
-    "global_cases":  "https://www.dropbox.com/scl/fi/6b42j36bit1fewljcubnn/covid19_global_daily_cases.csv?rlkey=mhnwwgv0tm86sxs7pnxe1uo96&st=ww9aoopn&dl=1",
-    "us_deaths":     "https://www.dropbox.com/scl/fi/7c3tb97wepg05ast22dfj/covid19_us_daily_deaths.csv?rlkey=21ry83onxlcz3aylxduhl7kq7&st=jf7vw1ze&dl=1"
+DATASET_FILES = {
+    "us_cases": "data/covid19_us_daily_cases.csv",
+    "us_deaths": "data/covid19_us_daily_deaths.csv",
+    "global_cases": "data/covid19_global_daily_cases.csv",
+    "global_deaths": "data/covid19_global_daily_deaths.csv",
 }
 
 # ✅ Load datasets from Dropbox
 def load_datasets() -> Dict[str, pd.DataFrame]:
     datasets = {}
-    for key, url in DROPBOX_DATASETS.items():
-        print(f"Loading dataset '{key}' from Dropbox...")
+    for key, url in DATASET_FILES.items():
+        print(f"Loading dataset '{key}' from local file...")
         try:
             datasets[key] = pd.read_csv(url)
             print(f"✅ Loaded '{key}'")
@@ -167,6 +167,48 @@ Your task is to understand the dataset type from {dataset_key} and generate an a
 - When using `update_xaxes` or `update_yaxes`, only use valid Plotly properties.
 - For `rangemode`, allowed values are: 'normal', 'tozero', 'nonnegative'.
 - Do NOT use 'auto' for `rangemode`.
+
+🎯 Example Plotly Visualizations:
+
+first make the df based on the user selected dataset and then make the plot
+1️ Line Chart - Daily Cases Over Time in india
+
+fig = px.line(df[df['Country/Region'] == 'India'], 
+              x='Date', 
+              y='Daily_Cases',
+              title='Daily COVID-19 Cases in India Over Time')
+fig.show()
+
+2  Bar Chart – Top 10 Countries by Daily Deaths
+
+
+country_deaths = df.groupby('Country/Region')['Daily_Deaths'].sum().reset_index()
+top10 = country_deaths.sort_values(by='Daily_Deaths', ascending=False).head(10)
+fig = px.bar(top10, x='Country/Region', y='Daily_Deaths', title='Top 10 Countries by Daily Deaths')
+fig.show()
+
+3 Choropleth Map – Global Daily Deaths
+
+global_deaths = df.groupby('Country/Region')['Daily_Deaths'].sum().reset_index()
+fig = px.choropleth(global_deaths, locations='Country/Region', locationmode='country names',
+                    color='Daily_Deaths', title='Global COVID-19 Daily Deaths')
+fig.show()
+
+4  Pie Chart – Share of Daily Cases Among Top 5 Countries
+
+country_cases = df.groupby('Country/Region')['Daily_Cases'].sum().reset_index()
+top5 = country_cases.sort_values(by='Daily_Cases', ascending=False).head(5)
+fig = px.pie(top5, names='Country/Region', values='Daily_Cases', title='Top 5 Countries by Daily Cases')
+fig.show()
+
+5 Area Chart – Daily Cases Over Time for Selected Countries
+
+country_cases = df.groupby('Country/Region')['Daily_Cases'].sum().reset_index()
+fig = px.area(country_cases, x='Date', y='Daily_Cases', color='Country/Region', title='Daily Cases Over Time by Country')
+fig.show()
+
+ Note: Always ensure proper data filtering, grouping, and sorting before plotting. Stick to using Daily_Cases for cases and Daily_Deaths for deaths across all chart types.
+
  """
         headers = {"Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}", "Content-Type": "application/json"}
         payload = {"model": "agentica-org/deepcoder-14b-preview:free", "messages": [{"role": "user", "content": prompt}]}
