@@ -9,51 +9,54 @@ import requests
 import json
 import re
 import numpy as np
-from pathlib import Path
 from typing import Dict, Optional, Union
 import traceback
 
-# Loading environment variables
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
-# Constants
-DATA_DIR = Path("data")
-DATASET_FILES = {
-    "us_cases": "covid19_us_daily_cases.csv",
-    "us_deaths": "covid19_us_daily_deaths.csv",
-    "global_cases": "covid19_global_daily_cases.csv",
-    "global_deaths": "covid19_global_daily_deaths.csv",
+# ✅ Dropbox Direct Download Links
+DROPBOX_DATASETS = {
+    "global_deaths": "https://www.dropbox.com/scl/fi/w6t6729gicr5c7lc0wd4q/covid19_global_daily_deaths.csv?rlkey=78yp5myjb592advu6bb2cy9tf&st=hfktxnb0&dl=1",
+    "us_cases":      "https://www.dropbox.com/scl/fi/26rezqi7n78gnmtntma32/covid19_us_daily_cases.csv?rlkey=hsq6mseu1xo5sm2niurbnj8bi&st=fu92ct1b&dl=1",
+    "global_cases":  "https://www.dropbox.com/scl/fi/6b42j36bit1fewljcubnn/covid19_global_daily_cases.csv?rlkey=mhnwwgv0tm86sxs7pnxe1uo96&st=ww9aoopn&dl=1",
+    "us_deaths":     "https://www.dropbox.com/scl/fi/7c3tb97wepg05ast22dfj/covid19_us_daily_deaths.csv?rlkey=21ry83onxlcz3aylxduhl7kq7&st=jf7vw1ze&dl=1"
 }
 
+# ✅ Load datasets from Dropbox
 def load_datasets() -> Dict[str, pd.DataFrame]:
     datasets = {}
-    for key, filename in DATASET_FILES.items():
-        file_path = DATA_DIR / filename
-        if not file_path.exists():
-            raise FileNotFoundError(f"Dataset file not found: {file_path}")
-        datasets[key] = pd.read_csv(file_path)
+    for key, url in DROPBOX_DATASETS.items():
+        print(f"Loading dataset '{key}' from Dropbox...")
+        try:
+            datasets[key] = pd.read_csv(url)
+            print(f"✅ Loaded '{key}'")
+        except Exception as e:
+            print(f"❌ Error loading '{key}': {e}")
     return datasets
 
-# Loading datasets 
-try:
-    DATASETS = load_datasets()
-except FileNotFoundError as e:
-    print(f"Error loading datasets: {e}")
-    DATASETS = {}
+DATASETS = load_datasets()
 
-#  cleaning LLM response and striping natural language
+# ===== Helper Functions =====
 def extract_code_from_llm_response(text: str) -> str:
+    # Extract code inside triple backticks
     match = re.search(r"```(?:python)?(.*?)```", text, re.DOTALL)
     if match:
         return match.group(1).strip()
-    lines = text.strip().splitlines()
-    code_lines = [line for line in lines if not line.strip().startswith(("Here's", "This", "#", "Output"))]
-    return "\n".join(code_lines)
+    else:
+        # Fallback: Stop at first non-code line
+        lines = text.strip().splitlines()
+        code_lines = []
+        for line in lines:
+            if "Your task" in line or "Output" in line:
+                break
+            code_lines.append(line)
+        return "\n".join(code_lines).strip()
 
-# filter out non-serializable objects
+
 def safe_convert(obj):
     if isinstance(obj, (np.ndarray, pd.Series)):
         return obj.tolist()
@@ -62,37 +65,14 @@ def safe_convert(obj):
     if isinstance(obj, (np.int64, np.float64)):
         return float(obj)
     return str(obj)
-#running the llm given code and returning the plot
-def run_code_and_return_plot(code: str, df: pd.DataFrame) -> Dict[str, Optional[Union[dict, str]]]:
-    local_env = {
-        "df": df.copy(),
-        "pd": pd,
-        "go": go,
-        "px": px
-    }
 
+def run_code_and_return_plot(code: str, df: pd.DataFrame, user_query: str) -> Dict[str, Optional[Union[dict, str]]]:
+    local_env = {"df": df.copy(), "pd": pd, "go": go, "px": px}
     try:
-        # ✅ Auto fix: wrong y='Deaths' (should be 'Daily_Deaths')
-        if "y='Deaths'" in code and 'Deaths' not in df.columns:
-            code = code.replace("y='Deaths'", "y='Daily_Deaths'")
-        if "y=\"Deaths\"" in code and 'Deaths' not in df.columns:
-            code = code.replace('y="Deaths"', 'y="Daily_Deaths"')
-
-        # ✅ Auto fix: if groupby used, enforce reset_index
-        if "groupby(" in code and "reset_index" not in code:
-            code = code.replace(".groupby(", ".groupby(").replace(").sum()", ").sum().reset_index()")
-
-        # ✅ Fallback if LLM forgets groupby
-        if "groupby" not in code and "Daily_Deaths" in df.columns:
-            df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-            df = df.groupby('Date')['Daily_Deaths'].sum().reset_index()
-            local_env["df"] = df
-            code = "fig = px.line(df, x='Date', y='Daily_Deaths', title='Total Daily Deaths Over Time')"
-
         exec(code, {}, local_env)
         fig = local_env.get("fig")
         if fig is None:
-            return {"plot": None, "error": "No figure named 'fig' was generated."}
+            return {"plot": None, "error": "LLM did not generate a figure."}
         fig_dict = fig.to_dict()
         fig_json = json.loads(json.dumps(fig_dict, default=safe_convert))
         return {"plot": fig_json, "error": None}
@@ -100,106 +80,181 @@ def run_code_and_return_plot(code: str, df: pd.DataFrame) -> Dict[str, Optional[
         traceback.print_exc()
         return {"plot": None, "error": str(e)}
 
-# route for handling the query form the frontend and sending it to llm
+# ===== /query Route =====
 @app.route("/query", methods=["POST"])
 def handle_query():
     try:
         user_query = request.json.get("query", "")
         dataset_key = request.json.get("dataset", "us_deaths")
-
         if not user_query:
             return jsonify({"error": "Query cannot be empty."}), 400
-
         df = DATASETS.get(dataset_key)
         if df is None:
             return jsonify({"error": f"Invalid dataset key: {dataset_key}"}), 400
-
         if 'Date' in df.columns:
             df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-
         columns_list = ', '.join(df.columns.tolist())
-        print("columns_list",columns_list)
-        # ✅ Final LLM Prompt
         prompt = f"""
-You are a Python data visualization expert using Plotly.
+You are a Python data visualization expert using Plotly and Pandas.
 
 📝 A user asked: "{user_query}"
 
-You are working with a Pandas DataFrame named `df`.
+You are working with a Pandas DataFrame named `df` loaded from a COVID-19 dataset: `{dataset_key}`.
 
-⚠️ You MUST only use the following column names exactly as provided:
-{columns_list}
+The available datasets are:
 
-Do NOT assume or rename any columns (e.g., don’t convert 'Country/Region' to 'Country_Region').
-If you use a wrong column name, the code will fail.
+---
 
-Use these names exactly as-is in any filtering, grouping, or plotting.
+🔹 **Dataset: global_deaths**
+- Columns: 'Country/Region', 'Province/State', 'Lat', 'Long', 'Date', 'Deaths', 'Daily_Deaths'
+- Use `Daily_Deaths` for daily death queries (e.g., "deaths in India on April 21, 2021")
+- Use `Deaths` for cumulative totals (e.g., "total deaths in Italy until May 2021")
+- Filter by: 'Country/Region', optionally 'Province/State'
+- Use: `px.bar()` for single-day, `px.line()` for trends
 
-Instructions:
-- Always convert 'Date' using df['Date'] = pd.to_datetime(df['Date'])
-- Prefer filtering locations in this order: 'Admin2' (county), 'Province_State' (state), 'Country/Region' (country)
-- If a specific date is mentioned, filter using: df['Date'] == pd.to_datetime('YYYY-MM-DD')
-- After filtering, group by 'Date' using: df.groupby('Date')['Cases' or 'Deaths'].sum().reset_index()
-- Add a column 'Label' or 'Region' if comparing multiple locations
+---
 
-📊 Chart Type Rules:
-- If the query filters to a **single day**, use `px.bar(...)` for a single bar
-- If the query includes **multiple dates**, use `px.line(...)` to show trends
+🔹 **Dataset: us_deaths**
+- Columns: 'Admin2', 'Province_State', 'Country_Region', 'Date', 'Deaths', 'Daily_Deaths'
+- Use `Daily_Deaths` for daily trends or per-date queries
+- Use `Deaths` only for cumulative totals if the user asks for total deaths
+- Filter by: 'Province_State' or 'Admin2'
+- Use: `px.bar()` for single-day or comparison, `px.line()` for time series
 
-🖼️ Visualization:
-- Always assign the chart to a variable called `fig`
-- Set a clear title using fig.update_layout(title=...)
-- Do not use `print()` or markdown — only return valid Python code inside triple backticks
-- DO NOT use `return fig`
-- Just assign the chart to a variable named `fig`
-- My environment will handle retrieving and rendering `fig`
-"""
+---
+
+🔹 **Dataset: global_cases**
+- Columns: 'Country/Region', 'Province/State', 'Lat', 'Long', 'Date', 'Cases', 'Daily_Cases'
+- Use `Daily_Cases` for daily new cases or trends
+- Use `Cases` for cumulative totals
+- Filter by: 'Country/Region' and optionally 'Province/State'
+- Use: `px.line()` for trends, `px.bar()` for one-time comparisons
+
+---
+
+🔹 **Dataset: us_cases**
+- Columns: 'Admin2', 'Province_State', 'Country_Region', 'Date', 'Cases', 'Daily_Cases'
+- Use `Daily_Cases` for trends or day-specific queries
+- Use `Cases` if the user asks for total or cumulative cases
+- Filter by: 'Province_State' or 'Admin2'
+- Use: `px.bar()` for daily comparisons, `px.line()` for time series
+
+---
+must use columns which are available in the dataset : {columns_list}
 
 
 
-        headers = {
-            "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
-            "Content-Type": "application/json"
-        }
+📅 Date Handling (All Datasets):
+- Always convert using: `df['Date'] = pd.to_datetime(df['Date'])`
+- For exact date: `df['Date'] == pd.to_datetime('YYYY-MM-DD')`
+- For month/year: use `.dt.month` and `.dt.year`
 
-        payload = {
-            "model": "agentica-org/deepcoder-14b-preview:free",
-            # "model": "qwen/qwen2.5-vl-3b-instruct:free",
-            "messages": [{"role": "user", "content": prompt}]
-        }
+📊 Aggregation Tips:
+- Use `groupby('Date')` or `groupby('Province_State')` as needed
+- Always use `.reset_index()` after groupby
 
+🖼️ Output Format:
+- Only return Python code in triple backticks
+- Assign your chart to a variable called `fig`
+- DO NOT use markdown, `print()`, or `return fig`
+
+Example output format:
+
+```python
+fig = px.line(...)
+fig.update_layout(title="...")
+Your task is to understand the dataset type from {dataset_key} and generate an appropriate Plotly chart using only available column names{columns_list}.
+- When using `update_xaxes` or `update_yaxes`, only use valid Plotly properties.
+- For `rangemode`, allowed values are: 'normal', 'tozero', 'nonnegative'.
+- Do NOT use 'auto' for `rangemode`.
+ """
+        headers = {"Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}", "Content-Type": "application/json"}
+        payload = {"model": "agentica-org/deepcoder-14b-preview:free", "messages": [{"role": "user", "content": prompt}]}
         response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
-
         if response.status_code != 200:
             return jsonify({"error": f"OpenRouter API error: {response.text}"}), 500
-
         llm_data = response.json()
-        raw_text = llm_data["choices"][0]["message"]["content"]
-        code = extract_code_from_llm_response(raw_text)
-
-        print(f"\n📝 User Query:\n{user_query}")
-        print(f"\n🧠 Generated Code:\n{code}")
-
-        result = run_code_and_return_plot(code, df)
-
-        if result["error"]:
-            print(f"\n❌ Code Execution Error:\n{result['error']}")
-        else:
-            print("\n📊 Plot Data Preview (First 500 characters):")
-            print(json.dumps(result["plot"], indent=2)[:500])
-
-        return jsonify({
-            "code": code,
-            "visualization": result["plot"],
-            "error": result["error"]
-        })
-
+        code = extract_code_from_llm_response(llm_data["choices"][0]["message"]["content"])
+        result = run_code_and_return_plot(code, df, user_query)
+        return jsonify({"code": code, "visualization": result["plot"], "error": result["error"]})
     except Exception as e:
-        print("\n=== ❌ Server Error ===")
         traceback.print_exc()
         return jsonify({"error": f"{type(e).__name__}: {str(e)}"}), 500
 
+# ===== /summary Route =====
+@app.route("/summary", methods=["POST"])
+def handle_summary():
+    try:
+        user_query = request.json.get("query", "")
+        dataset_key = request.json.get("dataset", "us_deaths")
+        if not user_query:
+            return jsonify({"error": "Query cannot be empty."}), 400
+        df = DATASETS.get(dataset_key)
+        if df is None:
+            return jsonify({"error": f"Invalid dataset key: {dataset_key}"}), 400
+        if 'Date' in df.columns:
+            df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+        columns_list = ', '.join(df.columns.tolist())
+        prompt = f"""
+You are a Python data analyst.
 
+### User Query:
+"{user_query}"
+
+You are working with a Pandas DataFrame `df` with columns:
+{columns_list}
+
+---
+
+### Task:
+- Understand the query and calculate ONLY what's requested:
+   - For total deaths or cases ➜ assign to `total`
+   - For max daily ➜ assign to `max_daily`
+   - For peak date ➜ assign to `peak_date`
+- If not asked, DO NOT calculate unnecessary values.
+- If data is missing, assign "Data not available".
+- If the dataset is related to deaths always use Daily_Deaths column to give output or to make sum or to get deaths between to dates
+Only return Python code inside triple backticks. No explanations.
+
+### Example:
+
+Query: "Total deaths in India"
+```python
+filtered_df = df[df['Country/Region'] == 'India']
+total = filtered_df['Daily_Deaths'].sum()
+
+Query: "Max daily deaths in USA"
+```python
+filtered_df = df[df['Country/Region'] == 'USA']
+max_daily = filtered_df['Daily_Deaths'].max()
+
+
+If unclear:
+total = "Data not available"
+"""
+        headers = {"Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}", "Content-Type": "application/json"}
+        payload = {"model": "agentica-org/deepcoder-14b-preview:free", "messages": [{"role": "user", "content": prompt}], "temperature": 0}
+        response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+        if response.status_code != 200:
+            return jsonify({"error": f"OpenRouter API error: {response.text}"}), 500
+        llm_data = response.json()
+        code = extract_code_from_llm_response(llm_data["choices"][0]["message"]["content"])
+        local_env = {"df": df.copy(), "pd": pd}
+        exec(code, {}, local_env)
+        response_lines = []
+        if "total" in local_env:
+            response_lines.append(f"Total: {safe_convert(local_env.get('total'))}")
+        if "max_daily" in local_env:
+            response_lines.append(f"Max Daily: {safe_convert(local_env.get('max_daily'))}")
+        if "peak_date" in local_env:
+            response_lines.append(f"Peak Date: {safe_convert(local_env.get('peak_date'))}")
+        summary_text = "\n".join(response_lines) if response_lines else "Data not available"
+        return jsonify({"summary": summary_text.strip(), "error": None})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": f"{type(e).__name__}: {str(e)}"}), 500
+
+# ===== Run Flask =====
 if __name__ == "__main__":
     print("🚀 Flask server running at http://localhost:5000")
     app.run(host="0.0.0.0", port=5000, debug=True)

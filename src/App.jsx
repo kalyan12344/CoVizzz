@@ -1,21 +1,23 @@
 import { useState } from "react";
 
 import "./App.css";
-import Chatbot from "./components/Chatbot";
-import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
-import Timeline from "./components/Timeline";
-import Impact from "./components/Impact";
-import Footer from "./components/Footer";
-import DataInsights from "./components/DataInsights";
+
+
 import { FaRobot, FaTimes } from "react-icons/fa";
+import Navbar from "./frontend/components/Navbar";
+import Hero from "./frontend/components/Hero";
+import Timeline from "./frontend/components/Timeline";
+import Impact from "./frontend/components/Impact";
+import DataInsights from "./frontend/components/DataInsights";
+import Chatbot from "./frontend/components/Chatbot";
+import Footer from "./frontend/components/Footer";
 
 function App() {
   const [showChatbot, setShowChatbot] = useState(false);
 
   return (
     <>
-      <Navbar />
+      <Navbar/>
       <Hero />
       <Timeline />
       <Impact />

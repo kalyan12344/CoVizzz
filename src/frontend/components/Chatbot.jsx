@@ -29,10 +29,20 @@ const Chatbot = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:5000/query", {
-        query: input,
-        dataset: dataset,
-      });
+      const response = await axios.post(
+        "http://localhost:5000/query",
+        {
+          query: input,
+          dataset: dataset,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+
 
       const botMessage = {
         text:
