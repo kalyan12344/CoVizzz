@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import "./App.css";
 
-
 import { FaRobot, FaTimes } from "react-icons/fa";
 import Navbar from "./frontend/components/Navbar";
 import Hero from "./frontend/components/Hero";
@@ -18,7 +17,7 @@ function App() {
 
   return (
     <>
-      <Navbar/>
+      <Navbar />
       <Hero />
       <Timeline />
       <Impact />

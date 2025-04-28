@@ -1,0 +1,127 @@
+[
+    {
+        "id": "viz_timelapse_map",
+        "title": "Global Time-Lapse Map of Daily COVID-19 Cases",
+        "description": "An animated choropleth map displaying the spread of daily COVID-19 cases worldwide over time, with a date slider to observe progression.",
+        "tags": [
+            "map",
+            "time-lapse",
+            "animated",
+            "global cases",
+            "daily cases",
+            "spread",
+            "choropleth",
+            "COVID-19 timeline",
+            "interactive"
+        ],
+        "viz_url": "https://public.tableau.com/views/TimeLapseofCasesinmap/Sheet3?:language=en-US&:embed=true&:display_count=n&:origin=viz_share_link"
+    },
+    {
+        "id": "viz_bubble_cases",
+        "title": "COVID-19 Cases by Country (Bubble Chart)",
+        "description": "A packed bubble chart visualizing COVID-19 cases by country, where the size of each bubble represents the total number of cases.",
+        "tags": [
+            "bubble chart",
+            "cases by country",
+            "visual comparison",
+            "COVID-19",
+            "size representation",
+            "packed bubbles"
+        ],
+        "viz_url": "https://public.tableau.com/views/CasesbycountryBubblechart/packedbubbles?:embed=true&:showVizHome=no&:display_count=n"
+    },
+    {
+        "id": "viz_deaths_vs_cases_line",
+        "title": "COVID-19 Cumulative Cases vs Deaths (Line Chart)",
+        "description": "A dual-line chart showing the cumulative number of COVID-19 cases and deaths over time, allowing comparison of trends throughout the pandemic.",
+        "tags": [
+            "line chart",
+            "cases vs deaths",
+            "cumulative",
+            "trend analysis",
+            "time series",
+            "COVID-19 timeline",
+            "comparison",
+            "pandemic progression"
+        ],
+        "viz_url": "https://public.tableau.com/views/DeathsvsCasesinLine/Sheet5?:embed=true&:showVizHome=no&:display_count=n"
+    },
+    {
+        "id": "viz_vaccinations_timeline",
+        "title": "Vaccinations by Date in Line Graph",
+        "description": "A line chart showing daily COVID-19 vaccinations across all locations over time, with interactive filters for date and region.",
+        "tags": [
+            "vaccinations",
+            "timeline",
+            "line chart",
+            "COVID-19",
+            "daily vaccinations",
+            "interactive",
+            "date filter"
+        ],
+        "viz_url": "https://public.tableau.com/views/VaccinationsbydateinLineGraph/Sheet1?:language=en-US&:embed=true&:display_count=n&:origin=viz_share_link"
+    },
+    {
+        "id": "viz_vaccines_by_manufacturer",
+        "title": "Global COVID-19 Vaccinations by Manufacturer",
+        "description": "An interactive bar chart showing total COVID-19 vaccinations by manufacturer with filters for date and location.",
+        "tags": [
+            "vaccinations",
+            "manufacturer",
+            "bar chart",
+            "global",
+            "COVID-19",
+            "total vaccinations",
+            "interactive",
+            "filters"
+        ],
+        "viz_url": "https://public.tableau.com/views/VaccinationsbydateinLineGraph/Sheet1?:language=en-US&:embed=true&:display_count=n&:origin=viz_share_link"
+    },
+    {
+        "id": "viz_gdp_trend",
+        "title": "GDP Growth Over Time (Line Chart)",
+        "description": "A line chart visualizing the growth of Gross Domestic Product (GDP) over time from 1948 to 2028, showing long-term economic trends.",
+        "tags": [
+            "GDP",
+            "economic growth",
+            "line chart",
+            "trend analysis",
+            "time series",
+            "economy",
+            "historical data"
+        ],
+        "viz_url": "https://public.tableau.com/views/GDP_17458239631820/Sheet18?:language=en-US&publish=yes&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link"
+    },
+    {
+        "id": "viz_cases_by_state",
+        "title": "COVID-19 Cases by State (Bar Chart)",
+        "description": "A bar chart displaying the total number of daily COVID-19 cases aggregated by US states, with an interactive date filter.",
+        "tags": [
+            "COVID-19",
+            "cases",
+            "states",
+            "bar chart",
+            "US",
+            "daily cases",
+            "regional analysis",
+            "date filter"
+        ],
+        "viz_url": "https://public.tableau.com/views/CasesByStates/Sheet20?:language=en-US&publish=yes&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link"
+    },
+    {
+        "id": "viz_deaths_by_state",
+        "title": "COVID-19 Deaths by State (Bar Chart)",
+        "description": "A bar chart showing the total number of daily COVID-19 deaths across US states, featuring an interactive date slider for time-based filtering.",
+        "tags": [
+            "COVID-19",
+            "deaths",
+            "states",
+            "bar chart",
+            "US",
+            "daily deaths",
+            "regional analysis",
+            "date filter"
+        ],
+        "viz_url": "https://public.tableau.com/views/DeathsByStates/Sheet19?:language=en-US&publish=yes&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link"
+    }
+]
