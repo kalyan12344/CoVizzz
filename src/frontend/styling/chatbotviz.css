@@ -1,0 +1,56 @@
+.chatbotviz-container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    background: #1e1e1e;
+    color: #fff;
+    border-radius: 10px;
+}
+
+.chatbotviz-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.chatbotviz-messages {
+    max-height: 500px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+}
+
+.message-bubble {
+    background: #2a2a2a;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.message-icon {
+    margin-right: 8px;
+}
+
+.chatbotviz-input {
+    display: flex;
+}
+
+.chatbotviz-input input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+}
+
+.chatbotviz-input button {
+    margin-left: 10px;
+    padding: 10px 20px;
+    border: none;
+    background: #4fc3f7;
+    border-radius: 5px;
+    cursor: pointer;
+}

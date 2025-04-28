@@ -11,6 +11,7 @@ import Impact from "./frontend/components/Impact";
 import DataInsights from "./frontend/components/DataInsights";
 import Chatbot from "./frontend/components/Chatbot";
 import Footer from "./frontend/components/Footer";
+import ChatbotViz from "./frontend/components/chatbotviz";
 
 function App() {
   const [showChatbot, setShowChatbot] = useState(false);
@@ -32,7 +33,7 @@ function App() {
             >
               <FaTimes />
             </button>
-            <Chatbot />
+            <ChatbotViz />
           </div>
         </div>
       )}
